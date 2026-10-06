@@ -1,1 +1,1 @@
-{"name":"analisador-de-texto","version":"1.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"16.4.0","react":"19.3.0","react-dom":"19.3.0"},"engines":{"node":"24.x"}}
+{"name":"analisador-de-texto","version":"1.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"@supabase/ssr":"0.12.7","@supabase/supabase-js":"2.117.2","next":"16.4.0","react":"19.3.0","react-dom":"19.3.0"},"engines":{"node":"24.x"}}
