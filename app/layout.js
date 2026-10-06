@@ -2,7 +2,7 @@ import './globals.css';
 
 // Personalize o título e a descrição do navegador aqui.
 export const metadata = {
-  title: 'Analisador de texto',
+  title: 'Detetive da Vó',
   description: 'Um espaço simples para analisar seu texto.',
 };
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 // Personalize todos os textos da página aqui.
 const textos = {
-  titulo: 'Seu texto, uma nova perspectiva.',
+  titulo: 'Detetive da Vó',
   subtitulo: 'Escreva abaixo e clique em Analisar para ver seu texto na área de resposta.',
   entrada: 'Seu texto',
   placeholder: 'Digite ou cole seu texto aqui…',
