@@ -51,12 +51,12 @@ A chave anon é pública; a autorização de dados deve ser protegida por polít
 
 ## Análise com OpenRouter
 
-O projeto começa com `modoTeste = true` em `desafio.js`: a API retorna `respostaExemplo` sem acessar a OpenRouter ou precisar de uma chave. O login continua obrigatório também nesse modo.
+O projeto está com `modoTeste = false` em `desafio.js`, usando a OpenRouter. Para testar sem acessar a IA ou precisar de uma chave, altere para `true`: a API retorna `respostaExemplo`. O login continua obrigatório também nesse modo.
 
 Para usar a IA real:
 
 1. Configure `OPENROUTER_API_KEY` em `.env.local` no desenvolvimento e nas variáveis de ambiente da Vercel em produção. Essa chave é usada somente no servidor; nunca adicione o prefixo `NEXT_PUBLIC_`.
-2. Em `desafio.js`, altere `modoTeste` para `false`. Edite `prompt` e `modelo` nesse mesmo arquivo quando quiser trocar a análise.
+2. Em `desafio.js`, mantenha `modoTeste` como `false`. Edite `prompt` e `modelo` nesse mesmo arquivo quando quiser trocar a análise.
 3. Reinicie o servidor ou faça um novo deploy. O servidor precisa acessar `https://openrouter.ai/api/v1/chat/completions`.
 
 `POST /api/ia` recebe JSON no formato `{ "texto": "Seu texto aqui" }` e retorna apenas o texto da resposta, com `Content-Type: text/plain`. A sessão é validada no servidor. O prompt é enviado como mensagem de sistema e o texto como mensagem da usuária. A rota aceita até 10.000 caracteres e espera até 30 segundos pelo provedor.

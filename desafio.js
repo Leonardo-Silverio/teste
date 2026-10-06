@@ -15,5 +15,5 @@ export const modelo = 'openai/gpt-4o-mini';
 
 // true: usa a resposta abaixo, sem acessar a OpenRouter ou consumir créditos.
 // false: usa o prompt, o modelo e OPENROUTER_API_KEY para consultar a IA.
-export const modoTeste = true;
+export const modoTeste = false;
 export const respostaExemplo = 'Este é um exemplo de resposta da Detetive da Vó. O modo de teste está ativo: nenhuma chamada foi feita à IA.';
