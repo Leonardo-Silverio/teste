@@ -1,6 +1,6 @@
 # Detetive da Vó
 
-Projeto em Next.js com App Router e JavaScript, com login e cadastro por e-mail e senha usando Supabase Auth. A página principal exige uma sessão validada no servidor. CSS próprio, sem biblioteca de estilo. O botão **Analisar** mostra exatamente o texto digitado, preservando quebras de linha. A resposta começa vazia.
+Projeto em Next.js com App Router e JavaScript, com login e cadastro por e-mail e senha usando Supabase Auth. A página principal exige uma sessão validada no servidor. CSS próprio, sem biblioteca de estilo. O botão **Analisar** chama a rota protegida `/api/ia`, que retorna a análise como texto simples. A resposta começa vazia.
 
 ## Desenvolvimento
 
@@ -20,7 +20,7 @@ npm start
 
 ## Personalização
 
-- Textos da análise: objeto `textos` em `app/analisador.js`.
+- Nome do produto, campos da tela, prompt, modelo e modo de teste: `desafio.js` na raiz.
 - Cores: variáveis no início de `app/globals.css`.
 - Título e descrição do navegador: `metadata` em `app/layout.js`.
 
@@ -47,3 +47,26 @@ A chave anon é pública; a autorização de dados deve ser protegida por polít
 - Sessões usam cookies gerenciados por `@supabase/ssr`, com atualização no `proxy.js` (convenção do Next.js 16) e validação por `getUser` no servidor.
 - Erros exibidos à usuária são traduzidos para português; mensagens internas do Supabase não são exibidas diretamente.
 - Sem configuração do Supabase, a página principal continua bloqueada e o login mostra uma orientação em português.
+
+
+## Análise com OpenRouter
+
+O projeto começa com `modoTeste = true` em `desafio.js`: a API retorna `respostaExemplo` sem acessar a OpenRouter ou precisar de uma chave. O login continua obrigatório também nesse modo.
+
+Para usar a IA real:
+
+1. Configure `OPENROUTER_API_KEY` em `.env.local` no desenvolvimento e nas variáveis de ambiente da Vercel em produção. Essa chave é usada somente no servidor; nunca adicione o prefixo `NEXT_PUBLIC_`.
+2. Em `desafio.js`, altere `modoTeste` para `false`. Edite `prompt` e `modelo` nesse mesmo arquivo quando quiser trocar a análise.
+3. Reinicie o servidor ou faça um novo deploy. O servidor precisa acessar `https://openrouter.ai/api/v1/chat/completions`.
+
+`POST /api/ia` recebe JSON no formato `{ "texto": "Seu texto aqui" }` e retorna apenas o texto da resposta, com `Content-Type: text/plain`. A sessão é validada no servidor. O prompt é enviado como mensagem de sistema e o texto como mensagem da usuária. A rota aceita até 10.000 caracteres e espera até 30 segundos pelo provedor.
+
+O botão mostra **Analisando...** e fica desabilitado durante a solicitação. O status 429 mostra **Você atingiu o limite de uso de hoje.**; essa mensagem corresponde ao status do provedor, sem criar uma cota diária própria.
+
+## Testes da API
+
+```sh
+npm test
+```
+
+Os testes executam a rota com autenticação e OpenRouter simuladas, sem credenciais ou chamadas externas. Cobrem acesso sem sessão, modo de teste, validação do texto, envio do prompt/modelo, resposta em texto, erro 429, falhas do provedor, respostas inválidas e timeout.

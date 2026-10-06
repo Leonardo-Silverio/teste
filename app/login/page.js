@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '../../lib/supabase/server';
 import { configurationError } from '../../lib/supabase/errors';
 import Formulario from './formulario';
+import { nomeProduto } from '../../desafio';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export default async function Login({ searchParams }) {
   }
   return (
     <main className="pagina pagina-login">
-      <h1>Detetive da Vó</h1>
+      <h1>{nomeProduto}</h1>
       <p className="subtitulo">Entre ou crie sua conta para continuar.</p>
       {!supabase && <p role="alert" className="mensagem-erro">{configurationError}</p>}
       {params.confirmacao === 'erro' && <p role="alert" className="mensagem-erro">Não foi possível confirmar seu e-mail. O link pode ter expirado ou já ter sido usado.</p>}

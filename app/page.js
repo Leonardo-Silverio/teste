@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '../lib/supabase/server';
 import Analisador from './analisador';
 import Sair from './sair';
+import { campos } from '../desafio';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export default async function Home() {
         <span className="email-conta">{user.email}</span>
         <Sair />
       </div>
-      <Analisador />
+      <Analisador textos={campos} />
     </main>
   );
 }

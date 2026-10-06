@@ -1,8 +1,9 @@
 import './globals.css';
+import { nomeProduto } from '../desafio';
 
 // Personalize o título e a descrição do navegador aqui.
 export const metadata = {
-  title: 'Detetive da Vó',
+  title: nomeProduto,
   description: 'Um espaço simples para analisar seu texto.',
 };
 
