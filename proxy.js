@@ -34,4 +34,4 @@ export async function proxy(request) {
   return response;
 }
 
-export const config = { matcher: ['/', '/login'] };
+export const config = { matcher: ['/', '/login', '/historico'] };

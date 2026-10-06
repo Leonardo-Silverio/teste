@@ -4,11 +4,26 @@ import { createClient } from '../../../lib/supabase/server';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-function textoResponse(texto, status = 200) {
+function textoResponse(texto, status = 200, headers = {}) {
   return new Response(texto, {
     status,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'private, no-store' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'private, no-store', ...headers },
   });
+}
+
+async function salvarResposta(supabase, userId, texto, resposta) {
+  let salvo = false;
+  try {
+    const { error } = await supabase.from('respostas').insert({
+      user_id: userId,
+      texto,
+      resposta,
+    });
+    salvo = !error;
+  } catch {
+    // Preserve a resposta gerada mesmo quando o banco estiver indisponível.
+  }
+  return textoResponse(resposta, 200, { 'X-Historico-Salvo': String(salvo) });
 }
 
 export async function POST(request) {
@@ -31,7 +46,7 @@ export async function POST(request) {
       return textoResponse('O texto deve ter no máximo 10.000 caracteres.', 400);
     }
 
-    if (modoTeste) return textoResponse(respostaExemplo);
+    if (modoTeste) return salvarResposta(supabase, user.id, body.texto, respostaExemplo);
     if (!process.env.OPENROUTER_API_KEY) {
       return textoResponse('O serviço de análise ainda não foi configurado. Tente novamente mais tarde.', 503);
     }
@@ -65,7 +80,7 @@ export async function POST(request) {
     if (typeof resposta !== 'string' || !resposta.trim()) {
       return textoResponse('O serviço de análise não retornou um texto. Tente novamente.', 502);
     }
-    return textoResponse(resposta);
+    return salvarResposta(supabase, user.id, body.texto, resposta);
   } catch (error) {
     if (error.name === 'TimeoutError' || error.name === 'AbortError') {
       return textoResponse('A análise demorou mais do que o esperado. Tente novamente.', 504);

@@ -1,11 +1,14 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Analisador({ textos }) {
+  const router = useRouter();
   const [texto, setTexto] = useState('');
   const [resposta, setResposta] = useState('');
   const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState('');
   const [analisando, setAnalisando] = useState(false);
   const emAndamento = useRef(false);
 
@@ -19,6 +22,7 @@ export default function Analisador({ textos }) {
     emAndamento.current = true;
     setAnalisando(true);
     setErro('');
+    setAviso('');
     setResposta('');
     try {
       const response = await fetch('/api/ia', {
@@ -44,6 +48,11 @@ export default function Analisador({ textos }) {
       const resultado = await response.text();
       if (!resultado.trim()) throw new Error('Resposta vazia');
       setResposta(resultado);
+      if (response.headers.get('X-Historico-Salvo') === 'false') {
+        setAviso('A análise foi concluída, mas não foi possível salvar no histórico. Copie a resposta antes de sair.');
+      } else if (response.headers.get('X-Historico-Salvo') === 'true') {
+        router.refresh();
+      }
     } catch (error) {
       setErro(error.name === 'TimeoutError' || error.name === 'AbortError'
         ? 'A análise demorou mais do que o esperado. Tente novamente.'
@@ -65,6 +74,7 @@ export default function Analisador({ textos }) {
         <textarea id="texto" value={texto} onChange={(event) => setTexto(event.target.value)} placeholder={textos.placeholder} rows={6} maxLength={10000} disabled={analisando} />
         <button type="submit" disabled={analisando}>{analisando ? 'Analisando...' : textos.botao}</button>
         {erro && <p role="alert" className="mensagem-erro">{erro}</p>}
+        {aviso && <p role="alert" className="mensagem-erro">{aviso}</p>}
       </form>
       <section className="resultado" aria-labelledby="titulo-resposta">
         <h2 id="titulo-resposta">{textos.resposta}</h2>

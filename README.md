@@ -70,3 +70,13 @@ npm test
 ```
 
 Os testes executam a rota com autenticação e OpenRouter simuladas, sem credenciais ou chamadas externas. Cobrem acesso sem sessão, modo de teste, validação do texto, envio do prompt/modelo, resposta em texto, erro 429, falhas do provedor, respostas inválidas e timeout.
+
+## Histórico no Supabase
+
+Execute o conteúdo de `supabase/migrations/202610060001_create_respostas.sql` no **SQL Editor** do mesmo projeto Supabase configurado no site. A chave anon usada pelo aplicativo não pode criar tabelas. Se já existir uma tabela `respostas` com outro esquema, adapte-a antes; a migração não remove dados existentes.
+
+A tabela `public.respostas` guarda `id`, `user_id`, `texto`, `resposta` e `created_at`. As políticas RLS permitem a cada pessoa inserir e ler somente suas próprias análises. O horário é registrado pelo banco, não pelo navegador.
+
+Após uma análise, a API salva o texto e a resposta usando o ID da sessão validada no servidor. Isso vale também para o modo de teste. Se o banco falhar, a resposta permanece visível e a tela informa que não foi salva, para evitar perder a análise ou repetir a chamada à IA.
+
+A página protegida `/historico` mostra as análises mais recentes primeiro, com data e hora de Brasília e navegação em páginas de 20 registros. O link **Histórico** aparece no topo das páginas autenticadas.

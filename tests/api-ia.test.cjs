@@ -4,8 +4,9 @@ const { readFileSync } = require('node:fs');
 const vm = require('node:vm');
 
 // Executa a rota real com autenticação e rede simuladas, sem usar credenciais.
-async function carregarRota({ modoTeste = false, user = { id: 'teste' }, key = 'chave-simulada', fetchImpl, configured = true } = {}) {
+async function carregarRota({ modoTeste = false, user = { id: 'teste' }, key = 'chave-simulada', fetchImpl, configured = true, insertError = null } = {}) {
   const chamadas = [];
+  const gravacoes = [];
   const context = vm.createContext({
     Response, AbortSignal,
     process: { env: { OPENROUTER_API_KEY: key } },
@@ -16,7 +17,7 @@ async function carregarRota({ modoTeste = false, user = { id: 'teste' }, key = '
   });
   const modules = {
     '../../../desafio': { prompt: 'Prompt configurável.', modelo: 'modelo-configuravel', modoTeste, respostaExemplo: 'Exemplo de teste.' },
-    '../../../lib/supabase/server': { createClient: async () => configured ? { auth: { getUser: async () => ({ data: { user }, error: null }) } } : null },
+    '../../../lib/supabase/server': { createClient: async () => configured ? { auth: { getUser: async () => ({ data: { user }, error: null }) }, from: table => ({ insert: async values => { gravacoes.push({ table, values }); return { error: insertError }; } }) } : null },
   };
   const route = new vm.SourceTextModule(readFileSync('app/api/ia/route.js', 'utf8'), { context });
   await route.link(specifier => {
@@ -27,7 +28,7 @@ async function carregarRota({ modoTeste = false, user = { id: 'teste' }, key = '
     }, { context });
   });
   await route.evaluate();
-  return { post: route.namespace.POST, chamadas };
+  return { post: route.namespace.POST, chamadas, gravacoes };
 }
 const request = body => new Request('http://localhost/api/ia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
@@ -107,4 +108,35 @@ test('timeout e falha de rede recebem mensagens em português', async () => {
     assert.equal(response.status, status);
     assert.match(await response.text(), /Tente novamente/);
   }
+});
+
+
+test('salva texto e resposta vinculados à sessão, ignorando ID fornecido no corpo', async () => {
+  const { post, gravacoes } = await carregarRota({ user: { id: 'pessoa-logada' } });
+  const response = await post(request({ texto: 'Texto enviado.', user_id: 'outra-pessoa' }));
+  assert.equal(response.headers.get('X-Historico-Salvo'), 'true');
+  assert.equal(await response.text(), 'Análise em português.');
+  assert.deepEqual(JSON.parse(JSON.stringify(gravacoes)), [{ table: 'respostas', values: { user_id: 'pessoa-logada', texto: 'Texto enviado.', resposta: 'Análise em português.' } }]);
+});
+
+test('modo de teste também grava no histórico', async () => {
+  const { post, gravacoes } = await carregarRota({ modoTeste: true });
+  const response = await post(request({ texto: 'Texto de teste.' }));
+  assert.equal(response.headers.get('X-Historico-Salvo'), 'true');
+  assert.equal(gravacoes.length, 1);
+  assert.equal(gravacoes[0].values.resposta, 'Exemplo de teste.');
+});
+
+test('falha no banco preserva a resposta e informa que não foi salva', async () => {
+  const { post } = await carregarRota({ insertError: { code: 'erro-simulado' } });
+  const response = await post(request({ texto: 'Texto enviado.' }));
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('X-Historico-Salvo'), 'false');
+  assert.equal(await response.text(), 'Análise em português.');
+});
+
+test('falha da IA não cria registro no histórico', async () => {
+  const { post, gravacoes } = await carregarRota({ fetchImpl: async () => new Response('', { status: 429 }) });
+  assert.equal((await post(request({ texto: 'Olá' }))).status, 429);
+  assert.equal(gravacoes.length, 0);
 });
